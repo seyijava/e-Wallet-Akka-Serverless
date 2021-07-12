@@ -1,0 +1,97 @@
+// This is the public API offered by your entity.
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "akkaserverless/annotations.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+import "value-entities/wallet_domain.proto";
+
+package com.bigdataConcept.akka.serverless.ewallet;
+
+option java_outer_classname = "WalletApi";
+
+
+message TransactionResponse {
+     string message = 1;
+}
+
+message WalletResponse {
+    string message = 1;
+}
+
+message DebitCommand {
+    string wallet_id = 1 [(akkaserverless.field).entity_key = true];
+    com.bigdataConcept.akka.serverless.ewallet.domain.Money money = 2;
+}
+
+message CreditCommand {
+    string wallet_id = 1 [(akkaserverless.field).entity_key = true];
+    com.bigdataConcept.akka.serverless.ewallet.domain.Money money = 2;
+}
+
+
+message CreateWalletCommand {
+    string wallet_id = 1 [(akkaserverless.field).entity_key = true];
+    com.bigdataConcept.akka.serverless.ewallet.domain.Profile profile = 2;
+}
+
+message RequestMiniStatement {
+    string wallet_id = 1 [(akkaserverless.field).entity_key = true];
+}
+
+
+message MiniStatement {
+    repeated com.bigdataConcept.akka.serverless.ewallet.domain.Transaction transactions = 1;
+    double balance = 2;
+}
+
+
+message RequestProfile {
+    string wallet_id = 1 [(akkaserverless.field).entity_key = true];
+}
+
+
+message ProfileResponse {
+     com.bigdataConcept.akka.serverless.ewallet.domain.Profile profile = 1;
+}
+
+service WalletService {
+    option (akkaserverless.service) = {
+        type : SERVICE_TYPE_ENTITY
+        component : ".domain.Wallet"
+    };
+
+    rpc Withdraw(DebitCommand) returns (TransactionResponse){
+        option (google.api.http) = {
+            post: "/wallet/{wallet_id}/debit",
+            body: "*",
+        };
+    }
+    rpc CreateWallet(CreateWalletCommand) returns (WalletResponse){
+        option (google.api.http) = {
+            post: "/wallet/{wallet_id}/create",
+            body: "*",
+        };
+    }
+    rpc Deposit(CreditCommand) returns (TransactionResponse){
+        option (google.api.http) = {
+            post: "/wallet/{wallet_id}/credit",
+            body: "*",
+        };
+    }
+
+    rpc GetMiniStatement(RequestMiniStatement) returns (MiniStatement){
+        option (google.api.http) = {
+            get: "/wallet/{wallet_id}/ministatement"
+        };
+    }
+
+    rpc GetProfile(RequestProfile) returns (ProfileResponse){
+        option (google.api.http) = {
+            get: "/wallet/{wallet_id}/profile"
+        };
+    }
+
+}

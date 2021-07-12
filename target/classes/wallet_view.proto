@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+import "google/api/annotations.proto";
+import "akkaserverless/annotations.proto";
+import "value-entities/wallet_domain.proto";
+import "google/protobuf/timestamp.proto";
+
+
+
+package com.bigdataConcept.akka.serverless.ewallet.view;
+
+
+option java_outer_classname = "WalletViewAPI";
+
+message ProfileByWalletIdRequest {
+  string name = 1;
+}
+
+message TransactionHistoryRequest {
+  string walletId = 1;
+}
+
+
+message TransactionsHistory {
+  string wallet_id = 1;
+  double amount = 2;
+  string transType = 3;
+  google.protobuf.Timestamp transactionDate = 4;
+}
+
+
+message TransactionHistoryResponse {
+  repeated TransactionsHistory results = 1;
+}
+
+service WalletView {
+
+  rpc ProcessWalletCreated(com.bigdataConcept.akka.serverless.ewallet.domain.WalletCreatedEvent) returns (TransactionsHistory) {
+    option (akkaserverless.method).eventing.in = {
+      event_sourced_entity: "wallet"
+    };
+    option (akkaserverless.method).view.update = {
+      table: "wallet"
+      transform_updates: true
+    };
+  }
+
+  rpc ProcessWalletCredited(com.bigdataConcept.akka.serverless.ewallet.domain.WalletCreditedEvent) returns (TransactionsHistory) {
+    option (akkaserverless.method).eventing.in = {
+      event_sourced_entity: "wallet"
+    };
+    option (akkaserverless.method).view.update = {
+      table: "wallettbl"
+      transform_updates: true
+    };
+  }
+
+
+  rpc ProcessWalletDebited(com.bigdataConcept.akka.serverless.ewallet.domain.WalletDebitedEvent) returns (TransactionsHistory) {
+    option (akkaserverless.method).eventing.in = {
+      event_sourced_entity: "wallet"
+    };
+    option (akkaserverless.method).view.update = {
+      table: "wallettbl"
+      transform_updates: true
+    };
+  }
+
+
+  rpc GetTransactionHistory(TransactionHistoryRequest) returns (TransactionsHistory) {
+    option (akkaserverless.method).view.query = {
+      query: "SELECT * FROM wallettbl WHERE  trans_Type = :walletId"
+    };
+    option (google.api.http) = {
+      get: "/wallet/transactionHistory"
+    };
+  }
+
+}

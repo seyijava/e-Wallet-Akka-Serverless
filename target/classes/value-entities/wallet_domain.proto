@@ -1,0 +1,72 @@
+
+syntax = "proto3";
+
+package com.bigdataConcept.akka.serverless.ewallet.domain;
+
+import "akkaserverless/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+
+option java_outer_classname = "WalletDomain";
+
+
+option (akkaserverless.file).event_sourced_entity  = {
+    name: "Wallet"
+    entity_type: "wallet"
+    state: "WalletState"
+    events: ["WalletCreatedEvent","WalletCreditedEvent", "WalletDebitedEvent"]
+};
+
+
+enum TransactionType {
+     Credit =  0;
+     Debit =  1;
+}
+
+message WalletCreditedEvent{
+       string wallet_id = 1;
+       Money amt = 2;
+      TransactionType transType = 3;
+      google.protobuf.Timestamp transactionDate = 4;
+
+}
+
+message WalletDebitedEvent{
+    string wallet_id = 1;
+    Money amt = 2;
+    TransactionType transType = 3;
+    google.protobuf.Timestamp transactionDate = 4;
+}
+
+
+
+message WalletCreatedEvent{
+  string wallet_id = 1;
+    Profile profile = 2;
+}
+
+
+message WalletState {
+    double balance = 1;
+    Profile profile = 2;
+    repeated Transaction transactionHistory = 3;
+}
+
+
+message Transaction{
+      double amount = 1;
+      TransactionType transactionType = 2;
+      google.protobuf.Timestamp transactionDate = 3;
+}
+
+message Profile{
+     string name = 1;
+     string surname = 2;
+     string email = 3;
+}
+
+message Money{
+    double  amount = 1;
+    string currency = 2;
+}
+
